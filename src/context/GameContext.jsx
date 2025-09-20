@@ -19,6 +19,10 @@ export const GameProvider = ({ children }) => {
   const [playerId, setPlayerId] = useState(null);
   const [playerRole, setPlayerRole] = useState(null);
   const [players, setPlayers] = useState([]);
+  const [playerToggleStatus, setPlayerToggleStatus] = useState(false);
+  const [selectedVote, setSelectedVote] = useState(null);
+  const [revealResult, setRevealResult] = useState(null);
+  const [gameResults, setGameResults] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -54,6 +58,9 @@ export const GameProvider = ({ children }) => {
       setPlayerId(response.player_id);
       setMatchCode(code);
       setPhase('lobby');
+      
+      await refreshMatchState(code);
+      
       return response;
     } catch (error) {
       setError('Failed to join match');
@@ -78,7 +85,7 @@ export const GameProvider = ({ children }) => {
       websocketService.on('message', (data) => {
         setLastMessage(data);
         
-        if (data.type === 'lobby_update' && data.players) {
+        if (data.type === 'match_state_update' && data.players) {
           setPlayers(data.players);
         }
         
@@ -98,6 +105,15 @@ export const GameProvider = ({ children }) => {
         
         if (data.type === 'role_assignment' && data.role) {
           setPlayerRole(data.role);
+        }
+        
+        if (data.type === 'reveal_result') {
+          console.log('Reveal result:', data);
+          setRevealResult(data);
+        }
+        
+        if (data.type === 'game_over') {
+          setGameResults(data);
         }
       });
 
@@ -119,6 +135,29 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  const sendToggle = (toggleValue) => {
+    if (websocketService.isConnected()) {
+      setPlayerToggleStatus(toggleValue);
+      websocketService.send({ 
+        type: 'toggle', 
+        value: toggleValue 
+      });
+    }
+  };
+
+  const selectVote = (playerId) => {
+    setSelectedVote(playerId);
+  };
+
+  const sendVote = () => {
+    if (websocketService.isConnected() && selectedVote) {
+      websocketService.send({ 
+        type: 'vote', 
+        target: selectedVote 
+      });
+    }
+  };
+
   const startGame = async () => {
     try {
       setError(null);
@@ -130,10 +169,11 @@ export const GameProvider = ({ children }) => {
     }
   };
 
-  const refreshMatchState = async () => {
+  const refreshMatchState = async (codeOverride = null) => {
     try {
       setError(null);
-      const matchState = await matchAPI.getMatchState(matchCode);
+      const codeToUse = codeOverride || matchCode;
+      const matchState = await matchAPI.getMatchState(codeToUse);
       if (matchState.players) {
         setPlayers(matchState.players);
       }
@@ -159,6 +199,10 @@ export const GameProvider = ({ children }) => {
     setPlayerId(null);
     setPlayerRole(null);
     setPlayers([]);
+    setPlayerToggleStatus(false);
+    setSelectedVote(null);
+    setRevealResult(null);
+    setGameResults(null);
     setIsConnected(false);
     setLastMessage(null);
     setError(null);
@@ -172,6 +216,10 @@ export const GameProvider = ({ children }) => {
     playerId,
     playerRole,
     players,
+    playerToggleStatus,
+    selectedVote,
+    revealResult,
+    gameResults,
     isConnected,
     lastMessage,
     error,
@@ -180,6 +228,9 @@ export const GameProvider = ({ children }) => {
     connectWebSocket,
     disconnectWebSocket,
     sendTestMessage,
+    sendToggle,
+    selectVote,
+    sendVote,
     startGame,
     refreshMatchState,
     advancePhase,
