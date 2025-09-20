@@ -34,6 +34,28 @@ export const matchAPI = {
       throw error;
     }
   },
+
+  startMatch: async (matchCode) => {
+    try {
+      const response = await api.post('/match/start', { 
+        match_code: matchCode 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error starting match:', error);
+      throw error;
+    }
+  },
+
+  getMatchState: async (matchCode) => {
+    try {
+      const response = await api.get(`/match/${matchCode}/state`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting match state:', error);
+      throw error;
+    }
+  },
 };
 
 export default api;

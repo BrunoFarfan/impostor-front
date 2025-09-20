@@ -16,6 +16,9 @@ export const GameProvider = ({ children }) => {
   const [phase, setPhase] = useState('home');
   const [matchCode, setMatchCode] = useState(null);
   const [playerName, setPlayerName] = useState('');
+  const [playerId, setPlayerId] = useState(null);
+  const [playerRole, setPlayerRole] = useState(null);
+  const [players, setPlayers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -31,7 +34,8 @@ export const GameProvider = ({ children }) => {
       setMatchCode(newMatchCode);
       
       // Join the match with the player's name
-      await matchAPI.joinMatch(name, newMatchCode);
+      const joinResponse = await matchAPI.joinMatch(name, newMatchCode);
+      setPlayerId(joinResponse.player_id);
       
       setPhase('lobby');
       return createResponse;
@@ -47,6 +51,7 @@ export const GameProvider = ({ children }) => {
       setError(null);
       setPlayerName(name);
       const response = await matchAPI.joinMatch(name, code);
+      setPlayerId(response.player_id);
       setMatchCode(code);
       setPhase('lobby');
       return response;
@@ -58,8 +63,8 @@ export const GameProvider = ({ children }) => {
   };
 
   const connectWebSocket = () => {
-    if (matchCode) {
-      websocketService.connect(matchCode);
+    if (matchCode && playerId) {
+      websocketService.connect(matchCode, playerId);
 
       websocketService.on('connected', () => {
         setIsConnected(true);
@@ -72,6 +77,28 @@ export const GameProvider = ({ children }) => {
 
       websocketService.on('message', (data) => {
         setLastMessage(data);
+        
+        if (data.type === 'lobby_update' && data.players) {
+          setPlayers(data.players);
+        }
+        
+        if (data.type === 'phase_change') {
+          if (data.phase === 'role_assignment') {
+            setPhase('role');
+          } else if (data.phase === 'round') {
+            setPhase('round');
+          } else if (data.phase === 'voting') {
+            setPhase('voting');
+          } else if (data.phase === 'reveal') {
+            setPhase('reveal');
+          } else if (data.phase === 'game_over') {
+            setPhase('gameover');
+          }
+        }
+        
+        if (data.type === 'role_assignment' && data.role) {
+          setPlayerRole(data.role);
+        }
       });
 
       websocketService.on('error', (data) => {
@@ -92,6 +119,31 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  const startGame = async () => {
+    try {
+      setError(null);
+      await matchAPI.startMatch(matchCode);
+    } catch (error) {
+      setError('Failed to start game');
+      console.error('Error starting game:', error);
+      throw error;
+    }
+  };
+
+  const refreshMatchState = async () => {
+    try {
+      setError(null);
+      const matchState = await matchAPI.getMatchState(matchCode);
+      if (matchState.players) {
+        setPlayers(matchState.players);
+      }
+    } catch (error) {
+      setError('Failed to refresh match state');
+      console.error('Error refreshing match state:', error);
+      throw error;
+    }
+  };
+
   const advancePhase = () => {
     const phases = ['home', 'lobby', 'role', 'round', 'voting', 'reveal', 'gameover'];
     const currentIndex = phases.indexOf(phase);
@@ -104,6 +156,9 @@ export const GameProvider = ({ children }) => {
     disconnectWebSocket();
     setPhase('home');
     setMatchCode(null);
+    setPlayerId(null);
+    setPlayerRole(null);
+    setPlayers([]);
     setIsConnected(false);
     setLastMessage(null);
     setError(null);
@@ -114,6 +169,9 @@ export const GameProvider = ({ children }) => {
     setPhase,
     matchCode,
     playerName,
+    playerId,
+    playerRole,
+    players,
     isConnected,
     lastMessage,
     error,
@@ -122,6 +180,8 @@ export const GameProvider = ({ children }) => {
     connectWebSocket,
     disconnectWebSocket,
     sendTestMessage,
+    startGame,
+    refreshMatchState,
     advancePhase,
     resetGame
   };

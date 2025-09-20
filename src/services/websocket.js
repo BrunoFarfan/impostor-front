@@ -4,9 +4,9 @@ class WebSocketService {
     this.listeners = new Map();
   }
 
-  connect(matchCode) {
+  connect(matchCode, playerId) {
     let wsUrl = `${import.meta.env.VITE_BACKEND_URL?.replace('http', 'ws') || 'ws://localhost:8000'}`;
-    wsUrl += `/ws/match/${matchCode}`;
+    wsUrl += `/ws/match/${matchCode}/${playerId}`;
 
     this.socket = new WebSocket(wsUrl);
 
