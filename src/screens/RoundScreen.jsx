@@ -8,6 +8,7 @@ const RoundScreen = () => {
     playerId, 
     playerToggleStatus, 
     sendToggle, 
+    isPlayerAlive,
     advancePhase 
   } = useGame();
 
@@ -15,6 +16,8 @@ const RoundScreen = () => {
     const newToggleStatus = !playerToggleStatus;
     sendToggle(newToggleStatus);
   };
+
+  const alivePlayersForStatus = players.filter(player => player.alive !== false);
 
   return (
     <Layout className="round-screen">
@@ -28,37 +31,50 @@ const RoundScreen = () => {
 
         {/* Toggle Button */}
         <div className="mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <label className="flex items-center cursor-pointer">
-              <span className="mr-3 text-lg font-medium text-yellow-100">Ready</span>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={playerToggleStatus}
-                  onChange={handleToggle}
-                  className="sr-only"
-                />
-                <div className={`block w-14 h-8 rounded-full ${
-                  playerToggleStatus ? 'bg-green-500' : 'bg-gray-600'
-                }`}>
-                  <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${
-                    playerToggleStatus ? 'translate-x-6' : ''
-                  }`}></div>
+          {isPlayerAlive() ? (
+            <div className="flex items-center justify-center mb-4">
+              <label className="flex items-center cursor-pointer">
+                <span className="mr-3 text-lg font-medium text-yellow-100">Ready</span>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={playerToggleStatus}
+                    onChange={handleToggle}
+                    className="sr-only"
+                  />
+                  <div className={`block w-14 h-8 rounded-full ${
+                    playerToggleStatus ? 'bg-green-500' : 'bg-gray-600'
+                  }`}>
+                    <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${
+                      playerToggleStatus ? 'translate-x-6' : ''
+                    }`}></div>
+                  </div>
                 </div>
+                <span className="ml-3 text-lg font-medium text-yellow-100">
+                  {playerToggleStatus ? 'Yes' : 'No'}
+                </span>
+              </label>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-red-800 bg-opacity-50 rounded-lg p-4">
+                <p className="text-red-200 text-lg font-medium">
+                  💀 You have been eliminated
+                </p>
+                <p className="text-red-300 text-sm mt-2">
+                  You can observe the game but cannot interact
+                </p>
               </div>
-              <span className="ml-3 text-lg font-medium text-yellow-100">
-                {playerToggleStatus ? 'Yes' : 'No'}
-              </span>
-            </label>
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Players Status List */}
-        {players.length > 0 && (
+        {/* Players Status List - Only show alive players */}
+        {alivePlayersForStatus.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4 text-yellow-100">Players Status</h2>
             <div className="bg-yellow-800 bg-opacity-50 rounded-lg p-4">
-              {players.map((player, index) => (
+              {alivePlayersForStatus.map((player, index) => (
                 <div 
                   key={player.id || index} 
                   className={`flex justify-between items-center py-2 px-3 rounded ${

@@ -23,6 +23,7 @@ export const GameProvider = ({ children }) => {
   const [selectedVote, setSelectedVote] = useState(null);
   const [revealResult, setRevealResult] = useState(null);
   const [gameResults, setGameResults] = useState(null);
+  const [canStart, setCanStart] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -85,8 +86,13 @@ export const GameProvider = ({ children }) => {
       websocketService.on('message', (data) => {
         setLastMessage(data);
         
-        if (data.type === 'match_state_update' && data.players) {
-          setPlayers(data.players);
+        if (data.type === 'match_state_update') {
+          if (data.players) {
+            setPlayers(data.players);
+          }
+          if (data.can_start !== undefined) {
+            setCanStart(data.can_start);
+          }
         }
         
         if (data.type === 'phase_change') {
@@ -94,6 +100,7 @@ export const GameProvider = ({ children }) => {
             setPhase('role');
           } else if (data.phase === 'round') {
             setPhase('round');
+            setPlayerToggleStatus(false);
           } else if (data.phase === 'voting') {
             setPhase('voting');
           } else if (data.phase === 'reveal') {
@@ -129,14 +136,17 @@ export const GameProvider = ({ children }) => {
     setLastMessage(null);
   };
 
-  const sendTestMessage = () => {
-    if (websocketService.isConnected()) {
-      websocketService.send({ message: 'hello' });
+  const sendRoleProposition = (proposition) => {
+    if (websocketService.isConnected() && playerId && proposition.trim()) {
+      websocketService.send({ 
+        type: 'role_proposition',
+        proposition: proposition.trim()
+      });
     }
   };
 
   const sendToggle = (toggleValue) => {
-    if (websocketService.isConnected()) {
+    if (websocketService.isConnected() && isPlayerAlive()) {
       setPlayerToggleStatus(toggleValue);
       websocketService.send({ 
         type: 'toggle', 
@@ -150,12 +160,18 @@ export const GameProvider = ({ children }) => {
   };
 
   const sendVote = () => {
-    if (websocketService.isConnected() && selectedVote) {
+    if (websocketService.isConnected() && selectedVote && isPlayerAlive()) {
       websocketService.send({ 
         type: 'vote', 
         target: selectedVote 
       });
     }
+  };
+
+  const isPlayerAlive = () => {
+    if (!playerId || !players.length) return true;
+    const currentPlayer = players.find(player => player.id === playerId);
+    return currentPlayer ? currentPlayer.alive !== false : true;
   };
 
   const startGame = async () => {
@@ -203,6 +219,7 @@ export const GameProvider = ({ children }) => {
     setSelectedVote(null);
     setRevealResult(null);
     setGameResults(null);
+    setCanStart(false);
     setIsConnected(false);
     setLastMessage(null);
     setError(null);
@@ -220,14 +237,16 @@ export const GameProvider = ({ children }) => {
     selectedVote,
     revealResult,
     gameResults,
+    canStart,
     isConnected,
     lastMessage,
     error,
+    isPlayerAlive,
     createMatch,
     joinMatch,
     connectWebSocket,
     disconnectWebSocket,
-    sendTestMessage,
+    sendRoleProposition,
     sendToggle,
     selectVote,
     sendVote,

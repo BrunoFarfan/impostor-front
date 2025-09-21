@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import Layout from '../components/Layout';
 
@@ -8,14 +8,17 @@ const LobbyScreen = () => {
     playerName,
     playerId,
     players,
+    canStart,
     isConnected, 
     lastMessage, 
     error, 
     connectWebSocket, 
-    sendTestMessage, 
+    sendRoleProposition, 
     startGame,
     refreshMatchState 
   } = useGame();
+
+  const [roleProposition, setRoleProposition] = useState('');
 
   useEffect(() => {
     if (matchCode && playerId && !isConnected) {
@@ -26,6 +29,13 @@ const LobbyScreen = () => {
   // Find current player to check if they are the host
   const currentPlayer = players.find(player => player.id === playerId);
   const isHost = currentPlayer?.host === true;
+
+  const handleSendRoleProposition = () => {
+    if (roleProposition.trim()) {
+      sendRoleProposition(roleProposition);
+      setRoleProposition(''); // Clear input after sending
+    }
+  };
 
   return (
     <Layout className="lobby-screen">
@@ -92,22 +102,47 @@ const LobbyScreen = () => {
           <div className="mb-4">
             <button 
               onClick={startGame}
-              className="nav-button nav-button-green"
+              disabled={!canStart}
+              className={`nav-button ${
+                canStart 
+                  ? 'nav-button-green' 
+                  : 'nav-button-gray opacity-50 cursor-not-allowed'
+              }`}
             >
-              Start Game
+              Start Game {!canStart && '(Waiting for role propositions...)'}
             </button>
           </div>
         )}
 
-        {/* Test WebSocket Button */}
+        {/* Role Proposition */}
         {isConnected && (
-          <div className="mb-4">
-            <button 
-              onClick={sendTestMessage}
-              className="nav-button nav-button-green mr-2"
-            >
-              Send Test Message
-            </button>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-green-100">Propose a Role</h3>
+            <div className="max-w-md mx-auto">
+              <input
+                type="text"
+                value={roleProposition}
+                onChange={(e) => setRoleProposition(e.target.value)}
+                placeholder="Enter a role suggestion..."
+                className="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-800 placeholder-gray-500 mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendRoleProposition();
+                  }
+                }}
+              />
+              <button 
+                onClick={handleSendRoleProposition}
+                disabled={!roleProposition.trim()}
+                className={`nav-button ${
+                  roleProposition.trim() 
+                    ? 'nav-button-green' 
+                    : 'nav-button-gray opacity-50 cursor-not-allowed'
+                }`}
+              >
+                Send Proposition
+              </button>
+            </div>
           </div>
         )}
 
