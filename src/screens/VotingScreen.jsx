@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import Layout from '../components/Layout';
 
@@ -13,85 +13,118 @@ const VotingScreen = () => {
     advancePhase 
   } = useGame();
 
+  const [hasVoted, setHasVoted] = useState(false);
+  const [votedPlayerName, setVotedPlayerName] = useState('');
+
   // Get only alive players (exclude current player from voting options)
   const alivePlayersToVote = players.filter(player => 
     player.alive !== false && player.id !== playerId
   );
 
   const handlePlayerSelect = (targetPlayerId) => {
-    selectVote(targetPlayerId);
+    if (!hasVoted) {
+      selectVote(targetPlayerId);
+    }
   };
 
   const handleVote = () => {
-    sendVote();
+    if (selectedVote && !hasVoted) {
+      const votedPlayer = alivePlayersToVote.find(p => p.id === selectedVote);
+      setVotedPlayerName(votedPlayer?.name || 'Unknown');
+      setHasVoted(true);
+      sendVote();
+    }
   };
 
   return (
     <Layout className="voting-screen">
       <div className="text-center">
         <h1 className="screen-title">
-          Voting Phase
+          Fase de votación
         </h1>
         
         {isPlayerAlive() ? (
-          <>
-            <p className="screen-subtitle text-purple-100">
-              Vote to eliminate a player
-            </p>
+          hasVoted ? (
+            /* Vote Confirmation Card */
+            <>
+              <p className="screen-subtitle text-purple-100">
+                Tu voto ha sido emitido
+              </p>
 
-            {/* Player Selection */}
-            {alivePlayersToVote.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-6 text-purple-100">Select a player to vote out:</h2>
-                <div className="flex flex-wrap justify-center md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                  {alivePlayersToVote.map((player, index) => (
-                    <button
-                      key={player.id || index}
-                      onClick={() => handlePlayerSelect(player.id)}
-                      className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                        selectedVote === player.id
-                          ? 'bg-purple-600 border-purple-400 text-white transform scale-105'
-                          : 'bg-purple-800 bg-opacity-50 border-purple-600 text-purple-100 hover:bg-purple-700 hover:bg-opacity-70'
-                      }`}
-                    >
-                      <div className="font-semibold text-lg">{player.name}</div>
-                    </button>
-                  ))}
+              <div className="vote-confirmation-container">
+                <div className="vote-confirmation-card">
+                  <h2 className="vote-confirmation-title">Voto emitido</h2>
+                  <div className="vote-confirmation-player">
+                    {votedPlayerName}
+                  </div>
+                  <p className="vote-confirmation-subtitle">
+                    Esperando a que otros jugadores voten...
+                  </p>
                 </div>
               </div>
-            )}
+            </>
+          ) : (
+            /* Voting Interface */
+            <>
+              <p className="screen-subtitle text-purple-100">
+                Vota para eliminar a un jugador
+              </p>
 
-            {/* Vote Button */}
-            {selectedVote && (
-              <div className="mb-6">
-                <p className="text-purple-200 mb-4">
-                  You selected: <span className="font-bold text-white">
-                    {alivePlayersToVote.find(p => p.id === selectedVote)?.name}
-                  </span>
-                </p>
+              {/* Player Selection */}
+              {alivePlayersToVote.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-6 text-purple-100">
+                    Selecciona a un jugador para votar:
+                  </h2>
+                  <div className="voting-player-grid">
+                    {alivePlayersToVote.map((player, index) => (
+                      <button
+                        key={player.id || index}
+                        onClick={() => handlePlayerSelect(player.id)}
+                        className={`voting-player-button ${
+                          selectedVote === player.id ? 'selected' : 'selectable'
+                        }`}
+                      >
+                        <div className="voting-player-name">{player.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Vote Button */}
+              <div className="vote-selection">
+                {/* {selectedVote && (
+                  <p className="vote-selection-text">
+                    Elegiste: <span className="vote-selection-name">
+                      {alivePlayersToVote.find(p => p.id === selectedVote)?.name}
+                    </span>
+                  </p>
+                )} */}
                 <button 
                   onClick={handleVote}
-                  className="nav-button nav-button-purple"
+                  disabled={!selectedVote}
+                  className={`nav-button ${selectedVote ? 'nav-button-purple' : 'nav-button-gray'}`}
                 >
-                  Cast Vote
+                  Emitir voto
                 </button>
               </div>
-            )}
-          </>
+            </>
+          )
         ) : (
           <>
             <p className="screen-subtitle text-purple-100">
-              Voting in progress...
+              Votación en progreso...
             </p>
             
             {/* Eliminated Player Message */}
             <div className="mb-8">
-              <div className="bg-red-800 bg-opacity-50 rounded-lg p-6">
-                <p className="text-red-200 text-lg font-medium mb-2">
-                  💀 You have been eliminated
+              <div className="eliminated-card">
+                <p className="eliminated-text">
+                  💀 Has sido eliminado
                 </p>
-                <p className="text-red-300 text-sm">
-                  You can observe the voting but cannot participate
+                <p className="eliminated-subtext">
+                  Puedes observar la votación pero no puedes participar
                 </p>
               </div>
             </div>
@@ -99,14 +132,16 @@ const VotingScreen = () => {
             {/* Show alive players for observation */}
             {alivePlayersToVote.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-6 text-purple-100">Players still alive:</h2>
-                <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+                <h2 className="text-xl font-semibold mb-6 text-purple-100">
+                  Jugadores vivos:
+                </h2>
+                <div className="voting-player-grid">
                   {alivePlayersToVote.map((player, index) => (
                     <div
                       key={player.id || index}
-                      className="p-4 rounded-lg border-2 bg-purple-800 bg-opacity-30 border-purple-600 text-purple-200"
+                      className="voting-player-button observer"
                     >
-                      <div className="font-semibold text-lg">{player.name}</div>
+                      <div className="voting-player-name">{player.name}</div>
                     </div>
                   ))}
                 </div>
@@ -116,12 +151,12 @@ const VotingScreen = () => {
         )}
 
         {/* Debug button - can be removed later */}
-        <button 
+        {/* <button 
           onClick={advancePhase}
           className="nav-button nav-button-gray"
         >
           Reveal Results (Debug)
-        </button>
+        </button> */}
       </div>
     </Layout>
   );

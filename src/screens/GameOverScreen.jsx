@@ -7,7 +7,7 @@ const GameOverScreen = () => {
 
   // Determine if the current player won
   const isWinner = gameResults && (
-    (gameResults.winner === 'normal' && playerRole === 'normal') ||
+    (gameResults.winner === 'normal' && playerRole !== 'impostor') ||
     (gameResults.winner === 'impostor' && playerRole === 'impostor')
   );
 
@@ -19,104 +19,69 @@ const GameOverScreen = () => {
         </h1>
         
         {gameResults ? (
-          <div className="mb-8">
+          <div className="game-over-main-container">
             {/* Winner Announcement */}
-            <div className={`p-8 rounded-lg mb-6 ${
-              gameResults.winner === 'normal' 
-                ? 'bg-blue-600 bg-opacity-50' 
-                : 'bg-red-600 bg-opacity-50'
+            <div className={`winner-announcement ${
+              gameResults.winner === 'normal' ? 'crew' : 'impostor'
             }`}>
-              <h2 className="text-4xl font-bold text-white mb-4">
-                {gameResults.winner === 'normal' ? '🛠️ Crew Wins!' : '🔥 Impostors Win!'}
+              <h2 className="winner-title">
+                {gameResults.winner === 'normal' ? '🛠️ Ganan los pibes!' : '🔥 Ganan los impostores!'}
               </h2>
               
-              <p className="text-xl text-gray-200 mb-4">
+              <p className="winner-description">
                 {gameResults.winner === 'normal' 
-                  ? 'All impostors have been eliminated!' 
-                  : 'The impostors have taken control!'}
+                  ? 'Todos los impostores han sido eliminados!' 
+                  : 'Los impostores son mayoría!'}
               </p>
             </div>
 
             {/* Personal Result */}
-            <div className={`p-6 rounded-lg mb-6 ${
-              isWinner 
-                ? 'bg-green-600 bg-opacity-50 border-2 border-green-400' 
-                : 'bg-gray-600 bg-opacity-50 border-2 border-gray-400'
+            <div className={`personal-result ${
+              isWinner ? 'victory' : 'defeat'
             }`}>
-              <h3 className="text-2xl font-bold text-white mb-2">
-                {isWinner ? '🎉 Victory!' : '💀 Defeat'}
+              <h3 className="personal-result-title">
+                {isWinner ? '🎉 Victoria!' : '💀 Derrota'}
               </h3>
-              <p className="text-lg text-gray-200">
-                You were a <span className="font-semibold capitalize">{playerRole}</span>
+              <p className="personal-result-role">
+                Tu rol fue <span className="personal-result-role-text">{playerRole}</span>
               </p>
-              <p className="text-sm text-gray-300 mt-2">
+              <p className="personal-result-message">
                 {isWinner 
-                  ? 'Your team achieved victory!'
-                  : 'Better luck next time!'}
+                  ? 'Carreaste a tu equipo!'
+                  : 'Equipo de fecas'}
               </p>
             </div>
 
-            {/* Game Statistics */}
-            {gameResults.statistics && (
-              <div className="bg-gray-700 bg-opacity-50 rounded-lg p-6 mb-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Game Statistics</h3>
-                <div className="grid grid-cols-2 gap-4 text-gray-300">
-                  {gameResults.statistics.total_rounds && (
-                    <div>
-                      <span className="font-medium">Rounds:</span> {gameResults.statistics.total_rounds}
-                    </div>
-                  )}
-                  {gameResults.statistics.eliminations && (
-                    <div>
-                      <span className="font-medium">Eliminations:</span> {gameResults.statistics.eliminations}
-                    </div>
-                  )}
-                  {gameResults.statistics.game_duration && (
-                    <div>
-                      <span className="font-medium">Duration:</span> {gameResults.statistics.game_duration}
-                    </div>
-                  )}
-                  {gameResults.statistics.players_count && (
-                    <div>
-                      <span className="font-medium">Players:</span> {gameResults.statistics.players_count}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Final Players Status */}
-            {gameResults.final_players && gameResults.final_players.length > 0 && (
-              <div className="bg-gray-800 bg-opacity-50 rounded-lg p-6 mb-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Final Results</h3>
-                <div className="space-y-2">
+            {/* {gameResults.final_players && gameResults.final_players.length > 0 && (
+              <div className="final-players-container">
+                <h3 className="final-players-title">Final Results</h3>
+                <div className="final-players-list">
                   {gameResults.final_players.map((player, index) => (
                     <div 
                       key={player.id || index}
-                      className={`flex justify-between items-center p-3 rounded ${
-                        player.alive ? 'bg-green-700 bg-opacity-50' : 'bg-red-700 bg-opacity-50'
+                      className={`final-player-item ${
+                        player.alive ? 'alive' : 'dead'
                       }`}
                     >
                       <div>
-                        <span className="font-medium text-white">{player.name}</span>
-                        <span className="text-sm text-gray-300 ml-2 capitalize">({player.role})</span>
+                        <span className="final-player-info">{player.name}</span>
+                        <span className="final-player-role">({player.role})</span>
                       </div>
-                      <div className="text-sm">
-                        {player.alive ? (
-                          <span className="text-green-300">🟢 Survived</span>
-                        ) : (
-                          <span className="text-red-300">💀 Eliminated</span>
-                        )}
+                      <div className={`final-player-status ${
+                        player.alive ? 'alive' : 'dead'
+                      }`}>
+                        {player.alive ? '🟢 Survived' : '💀 Eliminated'}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         ) : (
           <p className="screen-subtitle text-gray-300 mb-8">
-            The game has ended
+            El juego ha terminado
           </p>
         )}
 
@@ -124,7 +89,7 @@ const GameOverScreen = () => {
           onClick={resetGame}
           className="nav-button nav-button-gray"
         >
-          Play Again
+          Jugar de nuevo
         </button>
       </div>
     </Layout>

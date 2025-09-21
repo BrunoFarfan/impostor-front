@@ -6,15 +6,16 @@ const RoundScreen = () => {
   const { 
     players, 
     playerId, 
-    playerToggleStatus, 
-    sendToggle, 
+    playerToggleVotingReadiness, 
+    sendVotingReadiness, 
     isPlayerAlive,
-    advancePhase 
+    advancePhase,
+    roundNumber
   } = useGame();
 
   const handleToggle = () => {
-    const newToggleStatus = !playerToggleStatus;
-    sendToggle(newToggleStatus);
+    const newVotingReadiness = !playerToggleVotingReadiness;
+    sendVotingReadiness(newVotingReadiness);
   };
 
   const alivePlayersForStatus = players.filter(player => player.alive !== false);
@@ -23,71 +24,31 @@ const RoundScreen = () => {
     <Layout className="round-screen">
       <div className="text-center">
         <h1 className="screen-title">
-          Round Screen
+          Ronda {roundNumber}
         </h1>
         <p className="screen-subtitle text-yellow-100">
-          Round in progress...
+          Ronda en progreso...
         </p>
-
-        {/* Toggle Button */}
-        <div className="mb-8">
-          {isPlayerAlive() ? (
-            <div className="flex items-center justify-center mb-4">
-              <label className="flex items-center cursor-pointer">
-                <span className="mr-3 text-lg font-medium text-yellow-100">Ready</span>
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={playerToggleStatus}
-                    onChange={handleToggle}
-                    className="sr-only"
-                  />
-                  <div className={`block w-14 h-8 rounded-full ${
-                    playerToggleStatus ? 'bg-green-500' : 'bg-gray-600'
-                  }`}>
-                    <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${
-                      playerToggleStatus ? 'translate-x-6' : ''
-                    }`}></div>
-                  </div>
-                </div>
-                <span className="ml-3 text-lg font-medium text-yellow-100">
-                  {playerToggleStatus ? 'Yes' : 'No'}
-                </span>
-              </label>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-red-800 bg-opacity-50 rounded-lg p-4">
-                <p className="text-red-200 text-lg font-medium">
-                  💀 You have been eliminated
-                </p>
-                <p className="text-red-300 text-sm mt-2">
-                  You can observe the game but cannot interact
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Players Status List - Only show alive players */}
         {alivePlayersForStatus.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-yellow-100">Players Status</h2>
-            <div className="bg-yellow-800 bg-opacity-50 rounded-lg p-4">
+          <div className="players-status-container">
+            <h2 className="players-status-title">Estado de los jugadores</h2>
+            <div className="players-status-list">
               {alivePlayersForStatus.map((player, index) => (
                 <div 
                   key={player.id || index} 
-                  className={`flex justify-between items-center py-2 px-3 rounded ${
-                    player.id === playerId ? 'bg-yellow-600' : 'bg-yellow-700 bg-opacity-50'
-                  } ${index > 0 ? 'mt-2' : ''}`}
+                  className={`player-status-item ${
+                    player.id === playerId ? 'current' : 'other'
+                  }`}
                 >
-                  <span className="text-white font-medium">{player.name}</span>
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-2 ${
-                      player.toggled ? 'bg-green-400' : 'bg-red-400'
+                  <span className="player-status-name">{player.name}</span>
+                  <div className="player-status-indicator">
+                    <div className={`status-dot ${
+                      player.ready_to_vote ? 'ready' : 'not-ready'
                     }`}></div>
-                    <span className="text-sm text-yellow-100">
-                      {player.toggled ? 'Ready' : 'Not Ready'}
+                    <span className="status-text">
+                      {player.ready_to_vote ? 'Listo' : 'No listo'}
                     </span>
                   </div>
                 </div>
@@ -96,13 +57,53 @@ const RoundScreen = () => {
           </div>
         )}
 
+        {/* Toggle Button */}
+        <div className="toggle-container">
+          {isPlayerAlive() ? (
+            <div className="toggle-wrapper">
+              <label className="toggle-label">
+                {/* <span className="toggle-text">Ready</span> */}
+                <span className="toggle-text">
+                  {playerToggleVotingReadiness ? 'Listo' : 'No listo'}
+                </span>
+                  <div className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={playerToggleVotingReadiness}
+                      onChange={handleToggle}
+                      className="sr-only"
+                    />
+                    <div className={`toggle-background ${
+                      playerToggleVotingReadiness ? 'on' : 'off'
+                    }`}>
+                      <div className={`toggle-knob ${
+                        playerToggleVotingReadiness ? 'on' : ''
+                      }`}></div>
+                    </div>
+                </div>
+              </label>
+            </div>
+          ) : (
+            <div className="eliminated-message">
+              <div className="eliminated-card">
+                <p className="eliminated-text">
+                  💀 You have been eliminated
+                </p>
+                <p className="eliminated-subtext">
+                  You can observe the game but cannot interact
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Debug button - can be removed later */}
-        <button 
+        {/* <button 
           onClick={advancePhase}
           className="nav-button nav-button-yellow"
         >
           Start Voting (Debug)
-        </button>
+        </button> */}
       </div>
     </Layout>
   );

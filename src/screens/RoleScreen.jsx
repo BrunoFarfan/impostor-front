@@ -13,27 +13,27 @@ const RoleScreen = () => {
     <Layout className="role-screen">
       <div className="text-center">
         <h1 className="screen-title">
-          Your Role
+          Tu rol
         </h1>
         
         {playerRole ? (
-          <div className="mb-8">
-            <div className="bg-red-800 bg-opacity-50 rounded-lg p-6 mb-6">
-              <h2 className="text-3xl font-bold text-white mb-4 capitalize">
+          <div className="role-display-container">
+            <div className="role-card">
+              <h2 className="role-name">
                 {playerRole}
               </h2>
-              <p className="text-red-100 text-lg">
+              <p className="role-description">
                 {playerRole === 'impostor' 
-                  ? 'Try to not get caught!' 
-                  : 'Describe your character with one concept at a time.'
+                  ? 'Intenta no ser descubierto!' 
+                  : 'Describe a tu personaje, con un concepto cada ronda'
                 }
               </p>
             </div>
           </div>
         ) : (
-          <div className="mb-8">
+          <div className="role-waiting-container">
             <p className="screen-subtitle text-red-100">
-              Waiting for role assignment...
+              Esperando la asignación de rol...
             </p>
           </div>
         )}
@@ -42,7 +42,7 @@ const RoleScreen = () => {
           onClick={handleNext}
           className="nav-button nav-button-red"
         >
-          Start Round
+          Iniciar ronda
         </button>
       </div>
     </Layout>

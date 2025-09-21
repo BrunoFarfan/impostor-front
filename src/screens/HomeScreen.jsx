@@ -48,57 +48,59 @@ const HomeScreen = () => {
     <Layout className="home-screen">
       <div className="text-center">
         <h1 className="home-title">
-          Home Screen
+          Impostor
         </h1>
         <p className="home-subtitle text-blue-100">
-          Welcome to the Impostor Game
+          Crea o únete a una partida
         </p>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-500 text-white rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {/* Player Name Input */}
-          <div className="flex flex-col items-center space-y-2">
+        <div className="home-form-container">
+          <div className="home-form">
+            {/* Player Name Input */}
             <input
               type="text"
-              placeholder="Enter your name"
+              placeholder="Introduce tu nombre"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
-              className="px-4 py-2 rounded-lg text-gray-800"
+              className="home-input"
               disabled={isLoading}
             />
-          </div>
 
-          {/* Create Match Button */}
-          <button 
-            onClick={handleCreateMatch}
-            disabled={isLoading || !playerName.trim()}
-            className="nav-button nav-button-blue"
-          >
-            {isLoading ? 'Creating...' : 'Create Match'}
-          </button>
-
-          {/* Join Match Section */}
-          <div className="flex flex-col items-center space-y-2">
+            {/* Match Code Input */}
             <input
               type="text"
-              placeholder="Enter match code"
+              placeholder="Introduce el código para unirte"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
-              className="px-4 py-2 rounded-lg text-gray-800"
+              className="home-input"
               disabled={isLoading}
             />
-            <button 
-              onClick={handleJoinMatch}
-              disabled={isLoading || !playerName.trim() || !joinCode.trim()}
-              className="nav-button nav-button-blue"
-            >
-              {isLoading ? 'Joining...' : 'Join Match'}
-            </button>
+
+            {/* Action Buttons */}
+            <div className="home-buttons-container">
+              <button 
+                onClick={handleCreateMatch}
+                disabled={isLoading || !playerName.trim()}
+                className="home-button create"
+              >
+                {isLoading ? 'Creando...' : 'Crear Partida'}
+              </button>
+
+              <button 
+                onClick={handleJoinMatch}
+                disabled={isLoading || !playerName.trim() || !joinCode.trim()}
+                className="home-button join"
+              >
+                {isLoading ? 'Uniéndose...' : 'Unirse'}
+              </button>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="home-error">
+                {error}
+              </div>
+            )}
           </div>
         </div>
       </div>

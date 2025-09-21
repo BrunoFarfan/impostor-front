@@ -19,7 +19,8 @@ export const GameProvider = ({ children }) => {
   const [playerId, setPlayerId] = useState(null);
   const [playerRole, setPlayerRole] = useState(null);
   const [players, setPlayers] = useState([]);
-  const [playerToggleStatus, setPlayerToggleStatus] = useState(false);
+  const [playerToggleVotingReadiness, setplayerToggleVotingReadiness] = useState(false);
+  const [roundNumber, setRoundNumber] = useState(0);
   const [selectedVote, setSelectedVote] = useState(null);
   const [revealResult, setRevealResult] = useState(null);
   const [gameResults, setGameResults] = useState(null);
@@ -93,6 +94,9 @@ export const GameProvider = ({ children }) => {
           if (data.can_start !== undefined) {
             setCanStart(data.can_start);
           }
+          if (data.round !== undefined) {
+            setRoundNumber(data.round);
+          }
         }
         
         if (data.type === 'phase_change') {
@@ -100,7 +104,7 @@ export const GameProvider = ({ children }) => {
             setPhase('role');
           } else if (data.phase === 'round') {
             setPhase('round');
-            setPlayerToggleStatus(false);
+            setplayerToggleVotingReadiness(false);
           } else if (data.phase === 'voting') {
             setPhase('voting');
           } else if (data.phase === 'reveal') {
@@ -137,7 +141,12 @@ export const GameProvider = ({ children }) => {
   };
 
   const sendRoleProposition = (proposition) => {
-    if (websocketService.isConnected() && playerId && proposition.trim()) {
+    if (
+      websocketService.isConnected() &&
+      playerId &&
+      proposition.trim() &&
+      proposition.trim() !== 'impostor'
+    ) {
       websocketService.send({ 
         type: 'role_proposition',
         proposition: proposition.trim()
@@ -145,12 +154,12 @@ export const GameProvider = ({ children }) => {
     }
   };
 
-  const sendToggle = (toggleValue) => {
+  const sendVotingReadiness = (votingReadiness) => {
     if (websocketService.isConnected() && isPlayerAlive()) {
-      setPlayerToggleStatus(toggleValue);
+      setplayerToggleVotingReadiness(votingReadiness);
       websocketService.send({ 
-        type: 'toggle', 
-        value: toggleValue 
+        type: 'votingReadiness', 
+        value: votingReadiness 
       });
     }
   };
@@ -215,7 +224,7 @@ export const GameProvider = ({ children }) => {
     setPlayerId(null);
     setPlayerRole(null);
     setPlayers([]);
-    setPlayerToggleStatus(false);
+    setplayerToggleVotingReadiness(false);
     setSelectedVote(null);
     setRevealResult(null);
     setGameResults(null);
@@ -233,7 +242,8 @@ export const GameProvider = ({ children }) => {
     playerId,
     playerRole,
     players,
-    playerToggleStatus,
+    playerToggleVotingReadiness,
+    roundNumber,
     selectedVote,
     revealResult,
     gameResults,
@@ -247,7 +257,7 @@ export const GameProvider = ({ children }) => {
     connectWebSocket,
     disconnectWebSocket,
     sendRoleProposition,
-    sendToggle,
+    sendVotingReadiness,
     selectVote,
     sendVote,
     startGame,

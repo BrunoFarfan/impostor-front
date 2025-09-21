@@ -41,43 +41,63 @@ const LobbyScreen = () => {
     <Layout className="lobby-screen">
       <div className="text-center">
         <h1 className="screen-title">
-          Lobby Screen
+          Lobby
         </h1>
-        <p className="screen-subtitle text-green-100">
-          Player: {playerName} | Match Code: {matchCode}
-        </p>
+        <div>
+          <div className="screen-subtitle text-green-100">
+            Player: {playerName}
+            <br />
+            Código de la partida: <b>{matchCode}</b>
+            <button
+              onClick={() => navigator.clipboard.writeText(matchCode)}
+              title="Copy code"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#10b981',
+                fontSize: '1em',
+                padding: 0,
+                lineHeight: 1
+              }}
+              aria-label="Copy match code"
+            >
+              📋
+            </button>
+          </div>
+        </div>
 
         {/* WebSocket Connection Status */}
         <div className="mb-4">
-          <div className={`inline-block px-4 py-2 rounded-lg ${
-            isConnected ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          <div className={`connection-status ${
+            isConnected ? 'connected' : 'disconnected'
           }`}>
-            {isConnected ? 'Connected' : 'Disconnected'}
+            {isConnected ? 'Conectado' : 'Desconectado'}
           </div>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-3 bg-red-500 text-white rounded-lg">
+          <div className="error-display">
             {error}
           </div>
         )}
 
         {/* Players List */}
         {players.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-green-100">Players in Lobby</h2>
-            <div className="bg-gray-800 rounded-lg p-4">
+          <div className="players-list-container">
+            <h2 className="players-list-title">Jugadores en el Lobby</h2>
+            <div className="players-list">
               {players.map((player, index) => (
                 <div 
                   key={index} 
-                  className={`flex justify-between items-center py-2 px-3 rounded ${
-                    player.id === playerId ? 'bg-green-600' : 'bg-gray-700'
-                  } ${index > 0 ? 'mt-2' : ''}`}
+                  className={`player-item ${
+                    player.id === playerId ? 'current-player' : 'other-player'
+                  }`}
                 >
-                  <span className="text-white">{player.name}</span>
+                  <span className="player-name">{player.name}</span>
                   {player.host && (
-                    <span className="text-yellow-400 text-sm font-semibold">HOST</span>
+                    <span className="host-badge">HOST</span>
                   )}
                 </div>
               ))}
@@ -85,46 +105,16 @@ const LobbyScreen = () => {
           </div>
         )}
 
-        {/* Refresh Button */}
-        {isConnected && (
-          <div className="mb-4">
-            <button 
-              onClick={refreshMatchState}
-              className="nav-button nav-button-blue mr-2"
-            >
-              Refresh
-            </button>
-          </div>
-        )}
-
-        {/* Start Game Button (Only for Host) */}
-        {isHost && isConnected && (
-          <div className="mb-4">
-            <button 
-              onClick={startGame}
-              disabled={!canStart}
-              className={`nav-button ${
-                canStart 
-                  ? 'nav-button-green' 
-                  : 'nav-button-gray opacity-50 cursor-not-allowed'
-              }`}
-            >
-              Start Game {!canStart && '(Waiting for role propositions...)'}
-            </button>
-          </div>
-        )}
-
         {/* Role Proposition */}
         {isConnected && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3 text-green-100">Propose a Role</h3>
-            <div className="max-w-md mx-auto">
+          <div className="role-proposition-container">
+            <div className="role-proposition-form">
               <input
                 type="text"
                 value={roleProposition}
                 onChange={(e) => setRoleProposition(e.target.value)}
-                placeholder="Enter a role suggestion..."
-                className="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-800 placeholder-gray-500 mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Introduce una sugerencia de rol"
+                className="role-input"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleSendRoleProposition();
@@ -140,18 +130,52 @@ const LobbyScreen = () => {
                     : 'nav-button-gray opacity-50 cursor-not-allowed'
                 }`}
               >
-                Send Proposition
+                Enviar Propuesta
               </button>
             </div>
           </div>
         )}
 
-        {/* Last Message Display */}
-        {lastMessage && (
-          <div className="mb-4 p-3 bg-blue-500 text-white rounded-lg">
-            <strong>Last Message:</strong> {JSON.stringify(lastMessage)}
+        {/* Start Game Button (Only for Host) */}
+        {isHost && isConnected && (
+          <div className="mb-4">
+            <button 
+              onClick={startGame}
+              disabled={!canStart}
+              className={`nav-button ${
+                canStart 
+                  ? 'nav-button-green' 
+                  : 'nav-button-gray opacity-50 cursor-not-allowed'
+              }`}
+            >
+              Iniciar Juego
+            </button>
+            {!canStart && (
+              <div className="text-red-200 mt-2 text-sm">
+                Se necesita al menos una propuesta de rol
+              </div>
+            )}
           </div>
         )}
+
+        {/* Refresh Button */}
+        {isConnected && (
+          <div className="mb-4">
+            <button 
+              onClick={refreshMatchState}
+              className="nav-button nav-button-blue mr-2"
+            >
+              Actualizar
+            </button>
+          </div>
+        )}
+
+        {/* Last Message Display */}
+        {/* {lastMessage && (
+          <div className="message-display">
+            <strong>Last Message:</strong> {JSON.stringify(lastMessage)}
+          </div>
+        )} */}
       </div>
     </Layout>
   );
