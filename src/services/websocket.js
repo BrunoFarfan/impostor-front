@@ -1,3 +1,5 @@
+import { config } from './config.js';
+
 class WebSocketService {
   constructor() {
     this.socket = null;
@@ -5,7 +7,7 @@ class WebSocketService {
   }
 
   connect(matchCode, playerId) {
-    let wsUrl = `${import.meta.env.VITE_BACKEND_URL?.replace('http', 'ws') || 'ws://localhost:8000'}`;
+    let wsUrl = config.VITE_BACKEND_URL.replace('http', 'ws');
     wsUrl += `/ws/match/${matchCode}/${playerId}`;
 
     this.socket = new WebSocket(wsUrl);
