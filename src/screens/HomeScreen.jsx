@@ -71,7 +71,7 @@ const HomeScreen = () => {
               type="text"
               placeholder="Introduce el código para unirte"
               value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value)}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               className="home-input"
               disabled={isLoading}
             />

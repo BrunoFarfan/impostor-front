@@ -46,7 +46,7 @@ export const GameProvider = ({ children }) => {
       setPhase('lobby');
       return createResponse;
     } catch (error) {
-      setError('Failed to create match');
+      setError('Failed to create match: ' + error.message);
       console.error('Error creating match:', error);
       throw error;
     }
@@ -65,7 +65,7 @@ export const GameProvider = ({ children }) => {
       
       return response;
     } catch (error) {
-      setError('Failed to join match');
+      setError('Failed to join match: ' + error.message);
       console.error('Error joining match:', error);
       throw error;
     }
@@ -188,7 +188,7 @@ export const GameProvider = ({ children }) => {
       setError(null);
       await matchAPI.startMatch(matchCode);
     } catch (error) {
-      setError('Failed to start game');
+      setError('Failed to start game: ' + error.message);
       console.error('Error starting game:', error);
       throw error;
     }
@@ -197,6 +197,10 @@ export const GameProvider = ({ children }) => {
   const refreshMatchState = async (codeOverride = null) => {
     try {
       setError(null);
+      if (codeOverride && typeof codeOverride === 'string') {
+        codeOverride = codeOverride.toUpperCase();
+      }
+
       const codeToUse = codeOverride || matchCode;
       const matchState = await matchAPI.getMatchState(codeToUse);
       if (matchState.players) {

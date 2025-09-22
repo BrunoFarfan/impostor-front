@@ -9,12 +9,20 @@ const api = axios.create({
   },
 });
 
+const handleResponse = (response) => {
+  const data = response.data;
+  if (data && typeof data.error === 'string') {
+    throw new Error(data.error);
+  }
+  return data;
+};
+
 export const matchAPI = {
   // Create a new match
   createMatch: async () => {
     try {
       const response = await api.post('/match/create');
-      return response.data;
+      return handleResponse(response);
     } catch (error) {
       console.error('Error creating match:', error);
       throw error;
@@ -28,7 +36,7 @@ export const matchAPI = {
         name: name,
         match_code: code 
       });
-      return response.data;
+      return handleResponse(response);
     } catch (error) {
       console.error('Error joining match:', error);
       throw error;
@@ -40,7 +48,7 @@ export const matchAPI = {
       const response = await api.post('/match/start', { 
         match_code: matchCode 
       });
-      return response.data;
+      return handleResponse(response);
     } catch (error) {
       console.error('Error starting match:', error);
       throw error;
@@ -50,7 +58,7 @@ export const matchAPI = {
   getMatchState: async (matchCode) => {
     try {
       const response = await api.get(`/match/${matchCode}/state`);
-      return response.data;
+      return handleResponse(response);
     } catch (error) {
       console.error('Error getting match state:', error);
       throw error;

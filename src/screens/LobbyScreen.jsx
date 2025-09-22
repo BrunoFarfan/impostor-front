@@ -162,7 +162,7 @@ const LobbyScreen = () => {
         {isConnected && (
           <div className="mb-4">
             <button 
-              onClick={refreshMatchState}
+              onClick={() => refreshMatchState()}
               className="nav-button nav-button-blue mr-2"
             >
               Actualizar
